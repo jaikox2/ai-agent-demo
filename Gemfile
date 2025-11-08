@@ -33,4 +33,5 @@ group :development, :test do
   gem "rubocop-rails-omakase", require: false
 end
 
-
+gem 'qdrant-ruby', '~> 0.9.9'
+gem 'dotenv', '~> 3.1', '>= 3.1.8'
