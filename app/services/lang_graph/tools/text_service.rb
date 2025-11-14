@@ -20,7 +20,7 @@ module LangGraph
     def search_products(query: nil)
       p "Tools::TextService_________debug_query: #{query}"
       results = []
-      limit = 20
+      limit = 5
       @vector = nil
 
       if @vector.blank? && query.present?
