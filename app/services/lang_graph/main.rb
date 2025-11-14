@@ -43,16 +43,24 @@ module LangGraph
     end
 
     def init_lang_graph
-      classifier_prompt = classify_system_prompt
-
       graph = LangGraphRB::Graph.new do
         # Nodes
         node :entry do |state, ctx|
           { session_id: ctx[:session_id], message: ctx[:message] }
         end
 
-        node :classify do |state|
-          { intent: intent }
+        node :classify do |state, ctx|
+          user_input = state[:message].to_s.strip
+          next { intent: :unknown } if user_input.empty?
+
+          agent = ClassifyAgent.new([])
+          messages = agent.add_message_and_run!(content: user_input)
+
+          raw = messages.last.content
+          normalized = raw.gsub("'", '"')
+          parsed = JSON.parse(normalized)
+
+          { intent: parsed["intent"] }
         end
 
         node :search_products_by_images do |state|
