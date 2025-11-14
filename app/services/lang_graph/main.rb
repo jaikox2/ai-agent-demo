@@ -46,7 +46,7 @@ module LangGraph
       graph = LangGraphRB::Graph.new do
         # Nodes
         node :entry do |state, ctx|
-          { session_id: ctx[:session_id], message: ctx[:message] }
+          { session_id: ctx[:session_id], message: ctx[:message], account_id: ctx[:account_id] }
         end
 
         node :classify do |state, ctx|
@@ -109,9 +109,9 @@ module LangGraph
       graph
     end
 
-    def run(session_id:, message:)
+    def run(account_id:, session_id:, message:)
       thread_id = session_id.to_s
-      context   = { session_id:, message: }
+      context   = { session_id:, message:, account_id: }
 
       if @store.load(thread_id) # มี checkpoint เก่า
         @graph.resume(thread_id, {}, context: context, store: @store)

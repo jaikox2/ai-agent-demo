@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   scope "/:account_id", constraints: { account_id: /[A-Za-z0-9_-]+/ } do
+    get "main" => "main#index"
     resources :products, only: %i[index create update destroy], param: :id, constraints: { id: /[0-9a-fA-F-]{36}/ }
   end
 end

@@ -31,6 +31,7 @@ class LangGraph::ImagesSeacher
   private
 
   def valid_response(payload)
+    p payload
     p payload["score"]
     if payload && payload["score"] > 0.8
       payload
