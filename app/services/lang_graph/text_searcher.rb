@@ -1,17 +1,18 @@
 module LangGraph
   class TextSearcher
-    def self.perform(content, messages = [])
-      new(content, messages).perform
+    def self.perform(account_id, content, messages = [])
+      new(account_id, content, messages).perform
     end
 
-    def initialize(content, messages)
+    def initialize(account_id, content, messages)
+      @account_id = account_id
       @content = content
       @assistant = Langchain::Assistant.new(
         llm: llm,
         instructions: `You are a friendly Thai-speaking shop assistant for a search products.
         Use the LangGraph::Tools::TextService tool whenever a question involves products, inventory, price, or comparisons. The tool queries Qdrant; pass it a concise Thai or English search phrase and summarize the returned items in Thai. If no matches are returned, explain that nothing was found and suggest alternative search terms.
         `,
-        tools: [ LangGraph::Tools::TextService.new ],
+        tools: [ LangGraph::Tools::TextService.new(account_id) ],
         messages: messages
       )
     end

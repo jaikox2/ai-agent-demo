@@ -13,7 +13,12 @@ module LangGraph
 
     VECTOR_NAMES = %w[image text].freeze
 
+    def initialize(account_id)
+      @account_id = account_id
+    end
+
     def search_products(query: nil)
+      p "Tools::TextService_________debug_query: #{query}"
       results = []
       limit = 20
       @vector = nil
@@ -101,6 +106,10 @@ module LangGraph
         "stock" => payload["stock"],
         "details" => payload["details"]
       }.compact
+    end
+
+    def qdrant_service
+      @qdrant_service ||= ProductsQdrantService.new(account_id: @account_id)
     end
   end
 end
