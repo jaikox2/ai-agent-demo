@@ -1,13 +1,11 @@
 class SummarizeAgent
 
-  def initialize(messages, product)
+  def initialize(messages)
     @assistant = Langchain::Assistant.new(
       llm: llm,
-      instructions: <<~PROMPT.strip,
+      instructions: "
         คุณคือระบบตอบกลับลูกค้าจากการที่ลูกค้าพยายามค้นหาสินค้าในร้านค้า
-        ให้ตอบกลับด้วยรความสุภาพและกระชับ และนำเสนอสินค้าที่ตรงกับความต้องการของลูกค้าเหล่านี้
-        #{product[:name]}, #{product[:description]}
-      PROMPT
+        ให้ตอบกลับด้วยรความสุภาพและกระชับ และนำเสนอสินค้าที่ตรงกับความต้องการของลูกค้าเหล่านี้",
       tools: [],
       messages: messages
     )
@@ -26,6 +24,3 @@ class SummarizeAgent
     )
   end
 end
-# example
-# agent = SummaryAgent.new([], { name: "เสื้อเชิ้ตลายทาง", description: "เสื้อเชิ้ตลายทางสีฟ้า ขนาด M ทำจากผ้าฝ้ายคุณภาพดี" })
-# messages = agent.add_message_and_run!(content: "ต้องการสั่งซื้อเสื้อเชิ้ตลายทาง")

@@ -1,7 +1,7 @@
 module LangGraph
   class TextSearcher
     def initialize(account_id, content, messages = [])
-      @account_id = account_id
+      @account_id = account_id.to_s
       @content = content
       @assistant = Langchain::Assistant.new(
         llm: llm,

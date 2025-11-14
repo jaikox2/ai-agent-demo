@@ -9,7 +9,7 @@ class LangGraph::ImagesSeacher
       llm: llm,
       instructions: <<~PROMPT.strip,
         ช่วยแยก url จากข้อความ และ result เป็นรูปแบบ '{\"images\":[\"url_1\",\"url_2\"]}'
-        ตัวอย่าง
+        ตัวอย่าง(result เป็นแบบนี้เท่านั้น)
          - {\"images\":[\"https://assets.page365.net/photos/original/363992/439389349.jpg?1744946533\",\"https://assets.page365.net/photos/original/363992/44444.jpg?44444\"]}
       PROMPT
       messages: []
@@ -51,7 +51,7 @@ class LangGraph::ImagesSeacher
   def llm
     Langchain::LLM::OpenAI.new(
       api_key: ENV["OPENAI_API_KEY"],
-      default_options: { temperature: 0.1, chat_model: "gpt-4o-mini-2024-07-18" }
+      default_options: { temperature: 0.7, chat_model: "gpt-4o-mini-2024-07-18" }
     )
   end
 

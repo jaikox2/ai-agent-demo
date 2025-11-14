@@ -69,7 +69,8 @@ module LangGraph
         end
 
         node :search_products_by_text do |state|
-          product = LangGraph::TextSearcher.new(state[:account_id], state[:message]).add_message_and_run!
+          messages = LangGraph::TextSearcher.new(state[:account_id], state[:message]).add_message_and_run!
+          product = messages.last.content
           { found_product: product }
         end
 
@@ -79,11 +80,9 @@ module LangGraph
           else
             if state[:found_product]
               product_detail = state[:found_product]
-              agent = SummaryAgent.new([], { name: product_detail[:name], description: product_detail[:description] })
-              messages = agent.add_message_and_run!(content: user_input)
-              raw = messages.last.content
-              normalized = raw.gsub("'", '"')
-              msg = JSON.parse(normalized)
+              agent = SummarizeAgent.new([])
+              messages = agent.add_message_and_run!(content: "ช่วยสรุปให้หน่อย #{product_detail}")
+              msg = messages.last.content
             else
               msg = "เราไม่พบสินค้าใกล้เคียงความต้องการลูกค้าเลย กรูณาติดต่อแอดมิน"
             end
