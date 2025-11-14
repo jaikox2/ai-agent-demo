@@ -8,14 +8,8 @@ rescue LoadError => e
   warn "[LanggraphRbService] langgraph_rb not available: #{e.message}"
 end
 
-begin
-  require "langgraph_rb/chat_openai"
-rescue LoadError => e
-  warn "[LanggraphRbService] langgraph_rb/chat_openai not available: #{e.message}"
-end
-
-module Services
-  class LanggraphRbService
+module LangGraph
+  class Main
     class MemoryStore < LangGraphRB::Stores::InMemoryStore
       def save(thread_id, state, step_number, metadata = {})
         normalized_state = ensure_state_object(state)
@@ -49,9 +43,7 @@ module Services
     end
 
     def init_lang_graph
-      client = llm_client
       classifier_prompt = classify_system_prompt
-      interpret_intent = method(:parse_intent_label)
 
       graph = LangGraphRB::Graph.new do
         # Nodes
@@ -59,50 +51,22 @@ module Services
           { session_id: ctx[:session_id], message: ctx[:message] }
         end
 
-        llm_node :classify, llm_client: client, system_prompt: classifier_prompt do |state, ctx|
-          user_input = state[:message].to_s.strip
-          next { intent: :unknown } if user_input.empty?
-
-          messages = [
-            { role: "system", content: ctx[:system_prompt] },
-            { role: "user", content: user_input }
-          ]
-
-          raw_response = ctx[:llm_client].call(messages)
-          intent = interpret_intent.call(raw_response)
-
+        node :classify do |state|
           { intent: intent }
         end
 
-        node :search_products do |state|
-          params  = Langgraph::Nlu.parse_search_params(state[:message])
-          product = Langgraph::Catalog.search(**params)
-          { params: params, found_product: product }
+        node :search_products_by_images do |state|
+          product  = LangGraph::ImagesSeacher.new(state[:account_id]).run(state[:message])
+          { found_product: product }
         end
 
-        node :add_to_cart do |state|
-          p = state[:found_product]
-          cart = (state[:cart] || []) + [ { sku: p[:sku], name: p[:name], price: p[:price], qty: 1 } ]
-          { cart: cart }
-        end
-
-        node :checkout do |state|
-          total = state[:cart].map { |i| i[:price] * i[:qty] }.sum
-          { order: (state[:order] || {}).merge(total: total) }
-        end
-
-        node :place_order do |state|
-          t = state[:message].to_s.downcase
-          payment =
-            if t.include?("cod") || t.include?("ปลายทาง")
-              "COD"
-            elsif t.include?("โอน") || t.include?("bank transfer")
-              "Bank Transfer"
-            else
-              state.dig(:order, :payment) || "COD"
-            end
-          total = state[:cart].to_a.map { |i| i[:price] * i[:qty] }.sum
-          { order: (state[:order] || {}).merge(payment: payment, total: total) }
+        node :search_products_by_text do |state|
+          if state[:images].present?
+            params  = LangGraph::ImagesSeacher.new(state[:account_id]).run(state[:message])
+            { params: params, found_product: params }
+          else
+            { params: nil, found_product: nil }
+          end
         end
 
         node :summary do |state|
@@ -128,16 +92,13 @@ module Services
         edge :entry, :classify
 
         conditional_edge :classify, ->(s) { s[:intent] }, {
-          search: :search_products,
-          order:  :place_order,
+          search_products_by_images: :search_products_by_images,
+          search_products_by_text:  :search_products_by_text,
           unknown: :summary
         }
 
-        edge :search_products, :add_to_cart
-        edge :add_to_cart, :checkout
-        edge :checkout, :summary
-
-        edge :place_order, :summary
+        edge :search_products_by_images, :summary
+        edge :search_products_by_text, :summary
 
         # finish points
         set_finish_point :summary
@@ -155,59 +116,6 @@ module Services
         @graph.resume(thread_id, {}, context: context, store: @store)
       else
         @graph.invoke({}, context: context, store: @store, thread_id: thread_id)
-      end
-    end
-
-    private
-
-    def llm_client
-      unless defined?(LangGraphRB::ChatOpenAI)
-        raise "LangGraphRB::ChatOpenAI is unavailable. Ensure 'openai' gem is installed and required."
-      end
-
-      @llm_client ||= LangGraphRB::ChatOpenAI.new(
-        model: "gpt-4o-mini-2024-07-18",
-        temperature: 0.7,
-        api_key: ENV["OPENAI_API_KEY"]
-      )
-    end
-
-    def classify_system_prompt
-      <<~PROMPT.strip
-        คุณคือระบบจำแนกวัตถุประสงค์ของข้อความลูกค้าในร้านค้าออนไลน์ไทย
-        ให้ตอบกลับด้วย JSON เดียวในรูปแบบ {"intent": "<intent>"}
-        intents ที่อนุญาต:
-        - "search": ลูกค้าถามหาสินค้า ค้นหา หรือสอบถามรายละเอียดสินค้า
-        - "order": ลูกค้าต้องการสั่งซื้อ ชำระเงิน ยืนยันออเดอร์ หรือตามสถานะการสั่งซื้อ
-        - "unknown": อื่น ๆ ที่ไม่เข้ากับสองประเภทแรก
-        อย่าเพิ่มข้อความอื่นนอกจาก JSON ดังกล่าว
-      PROMPT
-    end
-
-    def parse_intent_label(raw_response)
-      payload =
-        case raw_response
-        when Hash
-          raw_response[:intent] || raw_response["intent"] || raw_response[:content] || raw_response["content"]
-        else
-          raw_response
-        end
-
-      text = payload.to_s.strip
-      begin
-        parsed = JSON.parse(text)
-        text = parsed["intent"] || parsed[:intent] || text
-      rescue JSON::ParserError
-        # keep original text
-      end
-
-      case text.to_s.strip.downcase
-      when "search", "ค้นหา", "หา"
-        :search
-      when "order", "สั่งซื้อ", "สั่ง"
-        :order
-      else
-        :unknown
       end
     end
   end
