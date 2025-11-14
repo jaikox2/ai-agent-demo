@@ -79,7 +79,11 @@ module LangGraph
           else
             if state[:found_product]
               product_detail = state[:found_product]
-              msg = "เรามีสินค้าใกล้เคียงดังนี้ ... #{product_detail[:name]}"
+              agent = SummaryAgent.new([], { name: product_detail[:name], description: product_detail[:description] })
+              messages = agent.add_message_and_run!(content: user_input)
+              raw = messages.last.content
+              normalized = raw.gsub("'", '"')
+              msg = JSON.parse(normalized)
             else
               msg = "เราไม่พบสินค้าใกล้เคียงความต้องการลูกค้าเลย กรูณาติดต่อแอดมิน"
             end
