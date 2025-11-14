@@ -69,12 +69,8 @@ module LangGraph
         end
 
         node :search_products_by_text do |state|
-          if state[:images].present?
-            params  = LangGraph::ImagesSeacher.new(state[:account_id]).run(state[:message])
-            { params: params, found_product: params }
-          else
-            { params: nil, found_product: nil }
-          end
+          product = LangGraph::ImagesSeacher.new(state[:account_id]).run(state[:message])
+          { found_product: product }
         end
 
         node :summary do |state|
