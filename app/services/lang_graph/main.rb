@@ -69,7 +69,7 @@ module LangGraph
         end
 
         node :search_products_by_text do |state|
-          product = LangGraph::ImagesSeacher.new(state[:account_id]).run(state[:message])
+          product = LangGraph::TextSearcher.new(state[:account_id], state[:message]).add_message_and_run!
           { found_product: product }
         end
 

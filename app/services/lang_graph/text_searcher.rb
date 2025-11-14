@@ -1,10 +1,6 @@
 module LangGraph
   class TextSearcher
-    def self.perform(account_id, content, messages = [])
-      new(account_id, content, messages).perform
-    end
-
-    def initialize(account_id, content, messages)
+    def initialize(account_id, content, messages = [])
       @account_id = account_id
       @content = content
       @assistant = Langchain::Assistant.new(
