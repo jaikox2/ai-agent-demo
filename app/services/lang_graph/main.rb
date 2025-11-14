@@ -78,20 +78,17 @@ module LangGraph
         end
 
         node :summary do |state|
-          case state[:intent]
-          when :search
-            p = state[:found_product]
-            msg = "แนะนำ: #{p[:name]} (#{p[:sku]}) ราคา #{p[:price]} บาท "\
-                  "เพิ่มลงตะกร้าแล้ว รวมชำระ #{state.dig(:order, :total)} บาท "\
-                  "ต้องการชำระแบบ COD หรือ โอนผ่านธนาคารคะ?"
-          when :order
-            pay  = state.dig(:order, :payment) || "COD"
-            note = pay == "COD" ? "ชำระปลายทาง" : "โอนผ่านธนาคาร"
-            msg  = "รับออเดอร์แล้วค่ะ วิธีชำระเงิน: #{pay} (#{note}) "\
-                  "ยอดรวม #{state.dig(:order, :total) || 0} บาท"
+          if state[:intent] == "other"
+            msg = "กรุณาติดต่อแอดมิน"
           else
-            msg = "ต้องการค้นหาสินค้าหรือสั่งซื้อคะ? เช่น 'หา เสื้อ สีแดง' หรือ 'สั่งซื้อ แบบ COD'"
+            if state[:found_product]
+              product_detail = state[:found_product]
+              msg = "เรามีสินค้าใกล้เคียงดังนี้ ... #{product_detail[:name]}"
+            else
+              msg = "เราไม่พบสินค้าใกล้เคียงความต้องการลูกค้าเลย กรูณาติดต่อแอดมิน"
+            end
           end
+
           { reply: msg }
         end
 
@@ -102,7 +99,7 @@ module LangGraph
         conditional_edge :classify, ->(s) { s[:intent] }, {
           search_products_by_images: :search_products_by_images,
           search_products_by_text:  :search_products_by_text,
-          unknown: :summary
+          other: :summary
         }
 
         edge :search_products_by_images, :summary
