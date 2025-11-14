@@ -108,6 +108,21 @@ module LangGraph
       }.compact
     end
 
+    def normalize_point_payload(raw_payload)
+      case raw_payload
+      when Hash
+        raw_payload.transform_keys(&:to_s)
+      when Array
+        raw_payload.each_with_object({}) do |item, memo|
+        next unless item.is_a?(Hash)
+
+        memo.merge!(item.transform_keys(&:to_s))
+      end
+      else
+        {}
+      end
+    end
+
     def qdrant_service
       @qdrant_service ||= ProductsQdrantService.new(account_id: @account_id)
     end
