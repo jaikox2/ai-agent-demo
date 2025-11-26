@@ -110,8 +110,8 @@ GEM
       logger
     faraday-multipart (1.1.1)
       multipart-post (~> 2.0)
-    faraday-net_http (3.4.1)
-      net-http (>= 0.5.0)
+    faraday-net_http (3.4.2)
+      net-http (~> 0.5)
     globalid (1.3.0)
       activesupport (>= 6.1)
     i18n (1.14.7)
@@ -121,7 +121,7 @@ GEM
       pp (>= 0.6.0)
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
-    json (2.15.2)
+    json (2.16.0)
     json-schema (5.2.2)
       addressable (~> 2.8)
       bigdecimal (~> 3.1)
@@ -156,8 +156,8 @@ GEM
     minitest (5.26.0)
     msgpack (1.8.0)
     multipart-post (2.4.1)
-    net-http (0.7.0)
-      uri
+    net-http (0.8.0)
+      uri (>= 0.11.1)
     net-imap (0.5.12)
       date
       net-protocol
@@ -191,7 +191,7 @@ GEM
     public_suffix (6.0.2)
     puma (7.1.0)
       nio4r (~> 2.0)
-    qdrant-ruby (0.9.9)
+    qdrant-ruby (0.9.10)
       faraday (>= 2.0.1, < 3)
     racc (1.8.1)
     rack (3.2.3)
@@ -286,7 +286,7 @@ GEM
     unicode-display_width (3.2.0)
       unicode-emoji (~> 4.1)
     unicode-emoji (4.1.0)
-    uri (1.1.0)
+    uri (1.1.1)
     useragent (0.16.11)
     websocket-driver (0.8.0)
       base64
@@ -311,7 +311,7 @@ DEPENDENCIES
   langgraph_rb
   openai
   puma (>= 5.0)
-  qdrant-ruby (~> 0.9.9)
+  qdrant-ruby (~> 0.9.10)
   rails (~> 7.2.3)
   rubocop-rails-omakase
   ruby-openai
