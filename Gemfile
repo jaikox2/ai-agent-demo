@@ -34,7 +34,7 @@ group :development, :test do
 end
 
 gem 'qdrant-ruby', '~> 0.9.9'
-gem 'dotenv', '~> 3.1', '>= 3.1.8'
+gem 'dotenv', '~> 3.2'
 gem "dotenv-rails"
 gem "langchainrb", "0.19.5"
 gem "openai"
